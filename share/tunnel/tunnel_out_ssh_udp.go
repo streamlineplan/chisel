@@ -12,6 +12,11 @@ import (
 	"github.com/jpillora/chisel/share/settings"
 )
 
+// maxConns caps concurrent UDP sub-connections per tunnel session.
+// Streamline fork: raised from upstream 100 to 1000 for chisel-operator
+// UDP-range tunnels (refs project_chisel_udp_forward_bug.md).
+const maxConns = 1000
+
 func (t *Tunnel) handleUDP(l *cio.Logger, rwc io.ReadWriteCloser, hostPort string) error {
 	conns := &udpConns{
 		Logger: l,
@@ -30,6 +35,7 @@ func (t *Tunnel) handleUDP(l *cio.Logger, rwc io.ReadWriteCloser, hostPort strin
 		maxMTU:   settings.EnvInt("UDP_MAX_SIZE", 9012),
 	}
 	h.Debugf("UDP max size: %d bytes", h.maxMTU)
+	h.Debugf("UDP max conns: %d (streamlineplan/chisel fork)", maxConns)
 	for {
 		p := udpPacket{}
 		if err := h.handleWrite(&p); err != nil {
@@ -62,7 +68,6 @@ func (h *udpHandler) handleWrite(p *udpPacket) error {
 	//TODO++ dont use go-routines, switch to pollable
 	//  array of listeners where all listeners are
 	//  sweeped periodically, removing the idle ones
-	const maxConns = 100
 	if !exists {
 		if h.udpConns.len() <= maxConns {
 			go h.handleRead(p, conn)
