@@ -45,7 +45,7 @@ jobs:
         uses: docker/login-action@v4
         with:
           username: gmdhstreamline
-          password: ${{ secrets.DOCKERHUB_ACCESS_TOKEN }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
 
       - name: Build and push app image
         uses: docker/build-push-action@v7
